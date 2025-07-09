@@ -2,7 +2,7 @@
 
 O **Music Backloggd** é uma aplicação web inspirada em plataformas como Letterboxd e Backloggd, voltada para amantes de música que desejam organizar, avaliar e comentar sobre suas faixas favoritas do Spotify. A plataforma permite que usuários conectem sua conta do Spotify, visualizem músicas ouvidas recentemente, avaliem faixas, comentem avaliações de outros usuários e até criem playlists com base nas músicas que já avaliaram.
 
-📄 [Baixar Porposta (PDF)](Proposta Music Backloggd.pdf)
+📄 [Baixar Porposta (PDF)](https://github.com/Kevin7Denker/MusicBackloggd/blob/main/Proposta%20Music%20Backloggd.pdf))
 ---
 
 ## 🚀 Instruções de Execução
