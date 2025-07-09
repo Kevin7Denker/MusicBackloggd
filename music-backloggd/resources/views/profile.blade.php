@@ -1,6 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('message'))
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4">
+        {{ session('message') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded mb-4">
+        {{ session('error') }}
+    </div>
+@endif
 <div class="max-w-6xl mx-auto p-8 md:p-12 bg-gray-900 rounded-3xl flex flex-col md:flex-row gap-10">
 
     <div class="w-full md:w-1/3 flex flex-col items-center md:items-start flex-shrink-0 mb-8 md:mb-0">
@@ -21,11 +32,23 @@
             <span>Total de playlists: <span class="font-medium">{{ $totalPlaylists ?? 0 }}</span></span>
             <span>Total de artistas seguidos: <span class="font-medium">{{ $totalArtists ?? 0 }}</span></span>
         </div>
+
+           @if(auth()->id() === $user->id)
+        <form action="{{ route('playlists.create') }}" method="POST">
+            @csrf
+            <button type="submit"
+                    class="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                Criar Playlist com Avaliações
+            </button>
+        </form>
+    @endif
     </div>
 
     <div class="w-full md:w-2/3 mt-10 md:mt-0">
         <h3 class="text-2xl font-bold mb-6 text-green-300">Minhas Avaliações</h3>
+        @auth
 
+@endauth
         @php
             $latestReviews = $user->reviews->sortByDesc('created_at')->take(6);
         @endphp
@@ -50,6 +73,7 @@
         @else
             <p class="text-gray-400">Você ainda não avaliou nenhuma música.</p>
         @endif
+
     </div>
 </div>
 @endsection

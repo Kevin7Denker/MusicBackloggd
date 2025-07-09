@@ -35,7 +35,6 @@ class BacklogController extends Controller
             ->groupBy('rating')
             ->pluck('count', 'rating');
 
-        // Ensure all ratings from 1 to 5 are present
         $allRatings = collect(range(1, 5))->mapWithKeys(function ($rating) use ($ratingDistribution) {
             return [$rating => $ratingDistribution->get($rating, 0)];
         });

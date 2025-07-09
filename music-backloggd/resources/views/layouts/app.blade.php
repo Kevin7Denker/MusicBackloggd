@@ -15,7 +15,9 @@
         </h1>
         </a>
         <div class="flex items-center gap-4">
-            <form action="{{ route('spotify.search') }}" method="GET" class="flex items-center gap-2">
+
+            @auth
+             <form action="{{ route('spotify.search') }}" method="GET" class="flex items-center gap-2">
     <input
         type="text"
         name="q"
@@ -30,7 +32,6 @@
         Buscar
     </button>
 </form>
-            @auth
     <a href="{{ route('backlog.index') }}" title="Backlog"
        class="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-200 transition-colors">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -65,7 +66,7 @@
 </header>
 
 
-    <main class="flex-1 py-6">
+    <main class="flex-1 ">
         @yield('content')
     </main>
 
@@ -75,7 +76,7 @@
         </div>
     </footer>
     <script>
-        // Theme toggle logic
+
         const themeToggle = document.getElementById('theme-toggle');
         const lightIcon = document.getElementById('theme-toggle-light-icon');
         const darkIcon = document.getElementById('theme-toggle-dark-icon');

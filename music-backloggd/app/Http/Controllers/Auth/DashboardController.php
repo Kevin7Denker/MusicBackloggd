@@ -98,7 +98,7 @@ if ($topResponse->successful()) {
         $track = $response->json();
 
         $reviews = Review::where('track_id', $track['id'])->with('user')->get();
-return view('track.show', compact('track', 'reviews'));
+        return view('track.show', compact('track', 'reviews'));
 
     }
 }

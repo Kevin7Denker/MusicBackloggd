@@ -29,7 +29,7 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/logout', function () {
     Auth::logout();
-    return redirect('/login');
+    return redirect('/');
 })->name('logout');
 Route::get('/track/{id}', [DashboardController::class, 'show'])
     ->name('track.show')
