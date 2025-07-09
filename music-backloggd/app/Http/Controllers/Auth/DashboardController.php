@@ -1,32 +1,27 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
-
+use App\Models\Review;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
-    /**
-     * Mostra a dashboard com cards das músicas ouvidas recentemente
-     */
     public function index()
     {
         $user = Auth::user();
 
-        // Verifica se o token precisa ser atualizado
         if (method_exists($user, 'needsSpotifyTokenRefresh') && $user->needsSpotifyTokenRefresh()) {
             app(SpotifyController::class)->refreshSpotifyToken($user);
         }
 
-        // Chama Spotify para pegar músicas ouvidas recentemente
         $response = Http::withOptions(['verify' => false])
             ->withToken($user->spotify_token)
             ->get('https://api.spotify.com/v1/me/player/recently-played', [
                 'limit' => 50,
             ]);
-
         if ($response->failed()) {
             \Log::error('Spotify API error', [
                 'status' => $response->status(),
@@ -34,18 +29,21 @@ class DashboardController extends Controller
             ]);
 
             if ($response->status() === 401) {
-                return redirect('/login')->withErrors(['error' => 'Sessão do Spotify expirou. Por favor, faça login novamente.']);
+                return redirect('/login')->withErrors([
+                    'error' => 'Sessão do Spotify expirou. Por favor, faça login novamente.'
+                ]);
             }
 
             if ($response->status() === 403) {
-                return redirect('/login')->withErrors(['error' => 'Permissão insuficiente. Conceda o acesso a "recentemente ouvidas".']);
+                return redirect('/login')->withErrors([
+                    'error' => 'Permissão insuficiente. Conceda o acesso a "recentemente ouvidas".'
+                ]);
             }
 
-            $recentTracks = [];
+            $recentTracks = collect();
         } else {
             $items = $response->json()['items'] ?? [];
 
-            // FILTRA SOMENTE TRACKS ÚNICAS
             $uniqueTracks = [];
             $trackIds = [];
 
@@ -57,25 +55,33 @@ class DashboardController extends Controller
                 }
             }
 
-            $recentTracks = $uniqueTracks;
+            $recentTracks = collect($uniqueTracks);
         }
 
-        return view('dashboard', compact('user', 'recentTracks'));
+        $topTracks = collect();
+
+$topResponse = Http::withOptions(['verify' => false])
+    ->withToken($user->spotify_token)
+    ->get('https://api.spotify.com/v1/me/top/tracks', [
+        'limit' => 20,
+        'time_range' => 'medium_term',
+]);
+
+if ($topResponse->successful()) {
+    $topTracks = collect($topResponse->json()['items'] ?? []);
+}
+
+       return view('dashboard', compact('user', 'recentTracks', 'topTracks'));
     }
 
-    /**
-     * Mostra detalhes de uma faixa específica
-     */
     public function show($id)
     {
         $user = Auth::user();
 
-        // Verifica se o token precisa ser atualizado
         if (method_exists($user, 'needsSpotifyTokenRefresh') && $user->needsSpotifyTokenRefresh()) {
             app(SpotifyController::class)->refreshSpotifyToken($user);
         }
 
-        // Busca dados detalhados da música pelo ID
         $response = Http::withOptions(['verify' => false])
             ->withToken($user->spotify_token)
             ->get("https://api.spotify.com/v1/tracks/{$id}");
@@ -91,6 +97,8 @@ class DashboardController extends Controller
 
         $track = $response->json();
 
-        return view('track.show', compact('track', 'user'));
+        $reviews = Review::where('track_id', $track['id'])->with('user')->get();
+return view('track.show', compact('track', 'reviews'));
+
     }
 }

@@ -1,118 +1,88 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="carousel()" x-init="init()" class="max-w-6xl mx-auto p-4 relative select-none">
-    <div
-        class="overflow-hidden rounded-xl shadow-lg"
-        @touchstart="startTouch($event)"
-        @touchmove="moveTouch($event)"
-        @touchend="endTouch()"
-    >
-        <div
-            class="flex transition-transform duration-500 ease-in-out"
-            :style="`transform: translateX(-${currentIndex * 100}%)`"
-        >
-            @foreach($recentTracks as $item)
-                @php $track = $item['track']; @endphp
+<div class="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-xl shadow-lg mb-8 p-8 flex flex-col items-center justify-center text-center max-w-4xl w-full mx-auto">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-lg">
+        Bem-vindo ao Music Backloggd!
+    </h1>
+    <p class="text-lg md:text-xl text-white/90 mb-4">
+        Descubra, acompanhe e organize suas músicas favoritas.
+    </p>
+</div>
+<div class="max-w-7xl mx-auto px-2 py-6">
+    <h2 class="text-3xl font-bold text-green-600 dark:text-green-400 border-b-2 border-green-500 pb-2 w-fit mb-6 text-left">
+        Suas músicas ouvidas recentemente
+    </h2>
+    @if($recentTracks->isEmpty())
+        <div class="flex flex-col items-center justify-center py-12">
+            <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6h13M9 6L5 9m4-3L5 3"></path>
+            </svg>
+            <p class="text-lg text-gray-500 dark:text-gray-400">
+                Você ainda não ouviu músicas recentemente ou não conseguimos carregar.
+            </p>
+        </div>
+    @else
+        <div class="flex gap-6 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-green-400 scrollbar-track-green-100 dark:scrollbar-thumb-green-600 dark:scrollbar-track-gray-800">
+            @foreach(collect($recentTracks)->take(6) as $item)
+                @php
+                    $track = $item['track'];
+                    $imageUrl = $track['album']['images'][0]['url'] ?? 'https://via.placeholder.com/150';
+                    $artists = implode(', ', array_column($track['artists'], 'name'));
+                @endphp
+
                 <a href="{{ route('track.show', ['id' => $track['id']]) }}"
-                   class="min-w-full bg-white dark:bg-gray-800 p-6 flex items-center gap-6"
-                >
-                    <img src="{{ $track['album']['images'][0]['url'] ?? 'https://via.placeholder.com/150' }}"
-                         alt="Capa do álbum"
-                         class="w-32 h-32 rounded-lg object-cover shadow-md flex-shrink-0">
-                    <div class="flex-1">
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 truncate">{{ $track['name'] }}</h3>
-                        <p class="text-lg text-gray-700 dark:text-gray-300 mb-1 truncate">
-                            {{ implode(', ', array_column($track['artists'], 'name')) }}
-                        </p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Álbum: {{ $track['album']['name'] }}
-                        </p>
-                        <p class="mt-3 text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M12 8v4l3 3"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg>
-                            Ouvido em: {{ \Carbon\Carbon::parse($item['played_at'])->diffForHumans() }}
+                   class="flex-shrink-0 w-40 sm:w-44 md:w-46 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group transform">
+                    <div class="relative">
+                        <img src="{{ $imageUrl }}"
+                             alt="Capa do álbum"
+                             class="w-full h-44 md:h-48 object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
+                        <span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full opacity-80 group-hover:opacity-100 transition-opacity">
+                            {{ \Carbon\Carbon::parse($item['played_at'])->diffForHumans() }}
+                        </span>
+                    </div>
+                    <div class="p-4 flex flex-col gap-1">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate" title="{{ $track['name'] }}">
+                            {{ $track['name'] }}
+                        </h3>
+                        <p class="text-sm text-gray-700 dark:text-gray-300 truncate" title="{{ $artists }}">
+                            {{ $artists }}
                         </p>
                     </div>
                 </a>
             @endforeach
         </div>
-    </div>
-
-    <!-- Prev/Next buttons -->
-    <button @click="prev()"
-            class="absolute top-1/2 left-2 -translate-y-1/2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none"
-            aria-label="Anterior">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-        </svg>
-    </button>
-    <button @click="next()"
-            class="absolute top-1/2 right-2 -translate-y-1/2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none"
-            aria-label="Próximo">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-    </button>
-
-    <!-- Indicators -->
-    <div class="flex justify-center mt-4 space-x-2">
-        @foreach ($recentTracks as $index => $item)
-            <button @click="goTo({{ $index }})"
-                    :class="currentIndex === {{ $index }} ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
-                    class="w-3 h-3 rounded-full transition focus:outline-none"
-                    aria-label="Ir para slide {{ $index + 1 }}"></button>
-        @endforeach
-    </div>
-
-    @if(count($recentTracks) === 0)
-        <p class="text-center text-gray-500 dark:text-gray-400 py-8">
-            Você ainda não ouviu músicas recentemente ou não conseguimos carregar.
-        </p>
     @endif
+        @if($topTracks->isNotEmpty())
+    <div class="mt-12">
+        <h2 class="text-3xl font-bold text-purple-600 dark:text-purple-400 border-b-2 border-purple-500 pb-2 w-fit mb-6">
+            Suas músicas mais ouvidas
+        </h2>
+
+        <div class="flex gap-6 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-purple-100 dark:scrollbar-thumb-purple-600 dark:scrollbar-track-gray-800">
+            @foreach($topTracks->take(6) as $track)
+            @php
+                $imageUrl = $track['album']['images'][0]['url'] ?? 'https://via.placeholder.com/150';
+                $artists = implode(', ', array_column($track['artists'], 'name'));
+            @endphp
+
+            <a href="{{ route('track.show', ['id' => $track['id']]) }}"
+               class="flex-shrink-0 w-40 sm:w-44 md:w-46 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group transform">
+                <img src="{{ $imageUrl }}"
+                 alt="Capa do álbum"
+                 class="w-full h-44 md:h-48 object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
+                <div class="p-4 flex flex-col gap-1">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate" title="{{ $track['name'] }}">
+                    {{ $track['name'] }}
+                </h3>
+                <p class="text-sm text-gray-700 dark:text-gray-300 truncate" title="{{ $artists }}">
+                    {{ $artists }}
+                </p>
+                </div>
+            </a>
+            @endforeach
+        </div>
+    </div>
+@endif
 </div>
-
-<script src="//unpkg.com/alpinejs" defer></script>
-<script>
-function carousel() {
-    return {
-        currentIndex: 0,
-        startX: 0,
-        currentX: 0,
-        dragging: false,
-        init() {
-
-            setInterval(() => this.next(), 5000);
-        },
-        prev() {
-            this.currentIndex = this.currentIndex === 0 ? {{ count($recentTracks) - 1 }} : this.currentIndex - 1;
-        },
-        next() {
-            this.currentIndex = this.currentIndex === {{ count($recentTracks) - 1 }} ? 0 : this.currentIndex + 1;
-        },
-        goTo(index) {
-            this.currentIndex = index;
-        },
-        startTouch(event) {
-            this.startX = event.touches[0].clientX;
-            this.dragging = true;
-        },
-        moveTouch(event) {
-            if (!this.dragging) return;
-            this.currentX = event.touches[0].clientX;
-        },
-        endTouch() {
-            if (!this.dragging) return;
-            const deltaX = this.currentX - this.startX;
-            if (deltaX > 50) this.prev();
-            else if (deltaX < -50) this.next();
-            this.dragging = false;
-            this.startX = 0;
-            this.currentX = 0;
-        }
-    }
-}
-</script>
 @endsection

@@ -9,13 +9,26 @@ use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
+use App\Services\SpotifyServices;
+use Illuminate\Http\Request;
 
 class SpotifyController extends Controller
 {
     public function redirectToProvider()
     {
         return Socialite::driver('spotify')
-            ->scopes(['user-read-email', 'playlist-read-private', 'user-read-recently-played'])
+             ->scopes([
+        'user-read-email',
+        'playlist-read-private',
+        'playlist-read-collaborative',
+        'user-read-recently-played',
+        'user-library-read',
+        'user-follow-read',
+        'user-read-private',
+        'user-top-read',
+        'playlist-modify-private',
+        'playlist-modify-public',
+    ])
             ->with(['show_dialog' => 'true'])
             ->redirect();
     }
@@ -68,12 +81,14 @@ class SpotifyController extends Controller
         $clientId = config('services.spotify.client_id');
         $clientSecret = config('services.spotify.client_secret');
 
-        $response = Http::asForm()->post('https://accounts.spotify.com/api/token', [
+        $response = Http::asForm()
+            ->withOptions(['verify' => false])
+            ->post('https://accounts.spotify.com/api/token', [
             'grant_type' => 'refresh_token',
             'refresh_token' => $user->spotify_refresh_token,
             'client_id' => $clientId,
             'client_secret' => $clientSecret,
-        ]);
+            ]);
 
         if ($response->successful()) {
             $data = $response->json();
@@ -86,4 +101,5 @@ class SpotifyController extends Controller
 
         return false;
     }
+
 }
